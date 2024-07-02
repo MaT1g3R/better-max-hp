@@ -1,0 +1,14 @@
+{
+  "modid": "MOD_NAME",
+  "name": "MOD_NAME",
+  "author_list": [
+    "AUTHOR"
+  ],
+  "description": "MOD_DESCRIPTION",
+  "version": "0.0.1",
+  "sts_version": "07-30-2020",
+  "mts_version": "3.15.0",
+  "dependencies": [
+    "basemod"
+  ]
+}
