@@ -1,4 +1,4 @@
-# sts-mod-template
+# Better max HP
 
-Slay the Spire mod template using gradle.
+Slay the Spire mod that makes max HP scaling better.
 

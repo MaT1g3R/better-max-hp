@@ -1,10 +1,10 @@
 {
-  "modid": "MOD_NAME",
-  "name": "MOD_NAME",
+  "modid": "BetterMaxHP",
+  "name": "BetterMaxHP",
   "author_list": [
-    "AUTHOR"
+    "vmService"
   ],
-  "description": "MOD_DESCRIPTION",
+  "description": "Better max HP scaling",
   "version": "0.0.1",
   "sts_version": "07-30-2020",
   "mts_version": "3.15.0",
