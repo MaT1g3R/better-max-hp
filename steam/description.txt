@@ -1,0 +1,4 @@
+[b][url=https://github.com/MaT1g3R/better-max-hp]Source code[/url][/b].
+
+Make your character size scale with max HP.
+
