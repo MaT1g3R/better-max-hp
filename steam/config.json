@@ -1,7 +1,11 @@
 {
+  "steamPublishedID": "3280682999",
   "title": "BetterMaxHP",
   "description": "Max your character size scale with max HP",
   "visibility": "public",
   "changeNote": "v0.0.1 - Initial release",
-  "tags": ["Character", "Qol"]
+  "tags": [
+    "Character",
+    "Qol"
+  ]
 }
