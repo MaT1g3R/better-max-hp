@@ -3,7 +3,7 @@
   "title": "BetterMaxHP",
   "description": "Max your character size scale with max HP",
   "visibility": "public",
-  "changeNote": "v0.0.1 - Initial release",
+  "changeNote": "v0.1.0\n- Fix watcher staff animation\n-Scale the corpse image",
   "tags": [
     "Character",
     "Qol"
