@@ -3,6 +3,9 @@ package BetterMaxHP;
 import basemod.BaseMod;
 import basemod.interfaces.MaxHPChangeSubscriber;
 import basemod.interfaces.PostInitializeSubscriber;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.esotericsoftware.spine.Bone;
 import com.esotericsoftware.spine.Skeleton;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
@@ -47,27 +50,46 @@ public class BetterMaxHP implements PostInitializeSubscriber, MaxHPChangeSubscri
     public static void reloadAnimation(AbstractPlayer player, float ratio) {
         String atlasUrl;
         String skeletonUrl;
+        String corpseUrl;
 
         switch (player.chosenClass) {
             case IRONCLAD:
                 atlasUrl = "images/characters/ironclad/idle/skeleton.atlas";
                 skeletonUrl = "images/characters/ironclad/idle/skeleton.json";
+                corpseUrl = "images/characters/ironclad/corpse.png";
                 break;
             case THE_SILENT:
                 atlasUrl = "images/characters/theSilent/idle/skeleton.atlas";
                 skeletonUrl = "images/characters/theSilent/idle/skeleton.json";
+                corpseUrl = "images/characters/theSilent/corpse.png";
                 break;
             case DEFECT:
                 atlasUrl = "images/characters/defect/idle/skeleton.atlas";
                 skeletonUrl = "images/characters/defect/idle/skeleton.json";
+                corpseUrl = "images/characters/defect/corpse.png";
                 break;
             case WATCHER:
                 atlasUrl = "images/characters/watcher/idle/skeleton.atlas";
                 skeletonUrl = "images/characters/watcher/idle/skeleton.json";
+                corpseUrl = "images/characters/watcher/corpse.png";
                 break;
             default:
                 return;
         }
+
+        Pixmap pixmap = new Pixmap(Gdx.files.internal(corpseUrl));
+        Pixmap
+                scaled =
+                new Pixmap((int) (pixmap.getWidth() / ratio), (int) (pixmap.getHeight() / ratio), pixmap.getFormat());
+        scaled.drawPixmap(pixmap,
+                0, 0, pixmap.getWidth(), pixmap.getHeight(),
+                0, 0, scaled.getWidth(), scaled.getHeight());
+
+        Texture texture = new Texture(scaled);
+        pixmap.dispose();
+        scaled.dispose();
+
+        setField(player, "corpseImg", texture);
 
         try {
             invokeMethod(player,
