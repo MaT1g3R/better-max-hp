@@ -2,39 +2,57 @@ package BetterMaxHP.patches;
 
 
 import BetterMaxHP.BetterMaxHP;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.esotericsoftware.spine.*;
+import com.esotericsoftware.spine.Bone;
+import com.esotericsoftware.spine.Skeleton;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
-import com.megacrit.cardcrawl.core.CardCrawlGame;
-import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.helpers.ModHelper;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import static com.megacrit.cardcrawl.characters.AbstractPlayer.PlayerClass.WATCHER;
 
 public class PlayerPatch {
-    private static Field findField(Class clazz, String fieldName) throws NoSuchFieldException {
+
+    private static Method findMethod(Class clz, String methodName, Class... parameterTypes)
+            throws NoSuchMethodException {
         try {
-            return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            Class superClass = clazz.getSuperclass();
+            return clz.getDeclaredMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException e) {
+            Class superClass = clz.getSuperclass();
             if (superClass == null) {
                 throw e;
-            } else {
-                return findField(superClass, fieldName);
             }
+            return findMethod(superClass, methodName, parameterTypes);
         }
     }
 
-    public static <A> A getField(Object obj, Class<?> clz, String name) {
-        Field field = null;
-        A result = null;
+    private static Field findField(Class clz, String fieldName) throws NoSuchFieldException {
         try {
-            field = findField(clz, name);
+            return clz.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
+            Class superClass = clz.getSuperclass();
+            if (superClass == null) {
+                throw e;
+            }
+            return findField(superClass, fieldName);
+        }
+    }
+
+    private static Object invokeMethod(Object object, Method method, Object... args)
+            throws InvocationTargetException, IllegalAccessException {
+        method.setAccessible(true);
+        return method.invoke(object, args);
+    }
+
+    private static <A> A getField(Object obj, String name) {
+        Field field;
+        A result;
+        try {
+            field = findField(obj.getClass(), name);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
@@ -47,10 +65,10 @@ public class PlayerPatch {
         return result;
     }
 
-    public static <A> void setField(Object obj, Class<?> clz, String name, A value) {
-        Field field = null;
+    private static <A> void setField(Object obj, String name, A value) {
+        Field field;
         try {
-            field = findField(clz, name);
+            field = findField(obj.getClass(), name);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
@@ -60,36 +78,6 @@ public class PlayerPatch {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void loadAnimation(AbstractPlayer player, String atlasUrl, String skeletonUrl, float scale) {
-        Class<AbstractCreature> clz = AbstractCreature.class;
-        TextureAtlas atlas = new TextureAtlas(Gdx.files.internal(atlasUrl));
-        setField(player, clz, "atlas", atlas);
-        SkeletonJson json = new SkeletonJson(atlas);
-
-        if (CardCrawlGame.dungeon != null && AbstractDungeon.player != null) {
-            if (AbstractDungeon.player.hasRelic("PreservedInsect") &&
-                    !player.isPlayer &&
-                    AbstractDungeon.getCurrRoom().eliteTrigger) {
-                scale += 0.3F;
-            }
-
-            if (ModHelper.isModEnabled("MonsterHunter") && !player.isPlayer) {
-                scale -= 0.3F;
-            }
-        }
-
-        json.setScale(Settings.renderScale / scale);
-        SkeletonData skeletonData = json.readSkeletonData(Gdx.files.internal(skeletonUrl));
-
-        Skeleton skeleton = new Skeleton(skeletonData);
-        setField(player, clz, "skeleton", skeleton);
-        skeleton.setColor(Color.WHITE);
-
-        AnimationStateData stateData = new AnimationStateData(skeletonData);
-        setField(player, clz, "stateData", stateData);
-        player.state = new AnimationState(stateData);
     }
 
     public static void reloadAnimation(float ratio) {
@@ -118,8 +106,27 @@ public class PlayerPatch {
                 return;
         }
 
-        loadAnimation(player, atlasUrl, skeletonUrl, ratio);
+        try {
+            invokeMethod(player,
+                    findMethod(player.getClass(), "loadAnimation", String.class, String.class, float.class),
+                    atlasUrl,
+                    skeletonUrl,
+                    ratio);
+        } catch (Exception e) {
+            BetterMaxHP.logger.error(e);
+        }
         player.state.setAnimation(0, "Idle", true);
+
+        if (player.chosenClass == WATCHER) {
+            try {
+                invokeMethod(player, findMethod(player.getClass(), "loadEyeAnimation"));
+                Skeleton skeleton = getField(player, "skeleton");
+                Bone bone = skeleton.findBone("eye_anchor");
+                setField(player, "eyeBone", bone);
+            } catch (Exception e) {
+                BetterMaxHP.logger.error(e);
+            }
+        }
     }
 
     @SpirePatch(clz = AbstractCreature.class, method = "increaseMaxHp")
